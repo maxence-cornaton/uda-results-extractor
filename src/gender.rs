@@ -1,5 +1,6 @@
 const AUTHORIZED_GENDER: [&str; 4] = ["Male", "Female", "(mixed)", "(n/a)"];
 
+/// A gender may only be one of [AUTHORIZED_GENDER].
 #[derive(Debug, Clone)]
 pub struct Gender {
     gender: String,

@@ -5,6 +5,7 @@ use crate::gender::Gender;
 use crate::place::Place;
 use crate::result_type::ResultType;
 
+/// Represents the result of a competitor for a competition.
 #[derive(Debug, Getters)]
 pub struct ResultEntry {
     id: u16,
@@ -35,6 +36,9 @@ impl ResultEntry {
         ResultEntry { id, name, gender, age, competition, place, result_type, result, details, age_group }
     }
 
+    /// A result line may includes multiple competitors (e.g., pair freestyle or relay race).
+    /// This function translates a single line into one or multiple [ResultEntry].
+    /// An error is returned if any field is invalid.
     pub fn from_result_line(
         ids: &str,
         names: &str,

@@ -6,6 +6,9 @@ use derive_getters::Getters;
 use crate::competitor_name::CompetitorName;
 use crate::result_entry::ResultEntry;
 
+/// Represents all results for a convention.
+/// Can be loaded through [ConventionResults::open_results].
+/// Competitors of a list of conventions can be retrieved through [ConventionResults::compute_competitors].
 #[derive(Debug, Getters)]
 pub struct ConventionResults {
     name: String,
@@ -13,13 +16,8 @@ pub struct ConventionResults {
 }
 
 impl ConventionResults {
-    pub fn new(name: &str, results: Vec<ResultEntry>) -> Self {
-        ConventionResults {
-            name: String::from(name),
-            results,
-        }
-    }
-
+    /// Loads results from a file.
+    /// Prints errors but they don't prevent the opening.
     pub fn open_results(filename: &String) -> Result<ConventionResults, Error> {
         let path = format!("{}/resources/{}", env!("CARGO_MANIFEST_DIR"), filename);
         let mut workbook: Xls<_> = open_workbook(path)?;
@@ -34,13 +32,15 @@ impl ConventionResults {
             let (id, name, gender, age, competition, place, result_type, result, details, age_group): (String, String, String, u8, String, String, String, String, String, String) = result?;
             match ResultEntry::from_result_line(&id, &name, &gender, age, &competition, &place, &result_type, &result, &details, &age_group) {
                 Ok(mut result_entries) => { results.append(&mut result_entries) }
-                Err(error) => { println!("Error while parsing line: {}", error) }
+                Err(error) => { eprintln!("Error while parsing line: {}", error) }
             };
         }
 
-        Ok(ConventionResults::new(filename, results))
+        Ok(ConventionResults { name: String::from(filename), results })
     }
 
+    /// Retrieves competitors from a list of conventions competitors,
+    /// so that every competitor appears a single time.
     pub fn compute_competitors(results: &Vec<ConventionResults>) -> HashSet<&CompetitorName> {
         let mut competitors = HashSet::new();
         for entries in results {

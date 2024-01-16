@@ -1,5 +1,6 @@
 const AUTHORIZED_RESULT_TYPES: [&str; 2] = ["AgeGroup", "Overall"];
 
+/// A result type may only be one of [AUTHORIZED_RESULT_TYPES].
 #[derive(Debug, Clone)]
 pub struct ResultType {
     result_type: String,
