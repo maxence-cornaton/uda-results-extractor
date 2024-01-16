@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn should_merge_same_competitor() {
-        let expected_competitor_name = CompetitorName::new(String::from("John Doe"));
+        let expected_competitor_name = CompetitorName::new("John Doe");
 
         let mut results = vec![];
         results.push(ConventionResults { name: String::from("convention 1"), results: vec![ResultEntry::create_result_entry("John Doe")] });

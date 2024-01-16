@@ -88,7 +88,7 @@ impl ResultEntry {
                 }
             };
             let name = names.get(i).unwrap();
-            let name = CompetitorName::new(name.to_string());
+            let name = CompetitorName::new(name);
 
             result_entries.push(ResultEntry {
                 id,
@@ -120,7 +120,7 @@ mod tests {
         pub fn create_result_entry(name: &str) -> ResultEntry {
             ResultEntry::new(
                 1,
-                CompetitorName::new(String::from(name)),
+                CompetitorName::new(name),
                 Gender::from_string("Male").unwrap(),
                 22,
                 String::from("100m"),
