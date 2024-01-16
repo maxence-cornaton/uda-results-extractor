@@ -1,6 +1,9 @@
+use std::collections::HashSet;
+
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 use derive_getters::Getters;
 
+use crate::competitor_name::CompetitorName;
 use crate::result_entry::ResultEntry;
 
 #[derive(Debug, Getters)]
@@ -36,5 +39,36 @@ impl ConventionResults {
         }
 
         Ok(ConventionResults::new(filename, results))
+    }
+
+    pub fn compute_competitors(results: &Vec<ConventionResults>) -> HashSet<&CompetitorName> {
+        let mut competitors = HashSet::new();
+        for entries in results {
+            for entry in entries.results() {
+                competitors.insert(entry.name());
+            }
+        }
+
+        competitors
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::competitor_name::CompetitorName;
+    use crate::convention_results::ConventionResults;
+    use crate::result_entry::ResultEntry;
+
+    #[test]
+    fn should_merge_same_competitor() {
+        let expected_competitor_name = CompetitorName::new(String::from("John Doe"));
+
+        let mut results = vec![];
+        results.push(ConventionResults::new("convention 1", vec![ResultEntry::create_result_entry("John Doe")]));
+        results.push(ConventionResults::new("convention 2", vec![ResultEntry::create_result_entry("John Doe")]));
+
+        let competitors = ConventionResults::compute_competitors(&results);
+        let competitors: Vec<&CompetitorName> = competitors.into_iter().collect();
+        assert_eq!(competitors, vec![&expected_competitor_name]);
     }
 }

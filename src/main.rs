@@ -1,7 +1,6 @@
 use calamine::Reader;
 
 use crate::convention_results::ConventionResults;
-use crate::result_entry::ResultEntry;
 
 mod result_entry;
 mod competitor_name;
@@ -24,7 +23,7 @@ fn main() {
         };
     }
 
-    let competitors = ResultEntry::compute_competitors(&all_results);
+    let competitors = ConventionResults::compute_competitors(&all_results);
 
     println!("{:?}", competitors);
 }

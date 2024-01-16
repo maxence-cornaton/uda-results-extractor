@@ -1,9 +1,6 @@
-use std::collections::HashSet;
-
 use derive_getters::Getters;
 
 use crate::competitor_name::CompetitorName;
-use crate::convention_results::ConventionResults;
 use crate::gender::Gender;
 use crate::place::Place;
 use crate::result_type::ResultType;
@@ -105,53 +102,30 @@ impl ResultEntry {
 
         Ok(result_entries)
     }
-
-    pub fn compute_competitors(results: &Vec<ConventionResults>) -> HashSet<&CompetitorName> {
-        let mut competitors = HashSet::new();
-        for entries in results {
-            for entry in entries.results() {
-                competitors.insert(entry.name());
-            }
-        }
-
-        competitors
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::competitor_name::CompetitorName;
-    use crate::convention_results::ConventionResults;
     use crate::gender::Gender;
     use crate::place::Place;
     use crate::result_entry::ResultEntry;
     use crate::result_type::ResultType;
 
-    fn create_result_entry(name: &str) -> ResultEntry {
-        ResultEntry::new(
-            1,
-            CompetitorName::new(String::from(name)),
-            Gender::from_string("Male").unwrap(),
-            22,
-            String::from("100m"),
-            Place::from_string("1").unwrap(),
-            ResultType::from_string("Overall").unwrap(),
-            String::from("00:14:99"),
-            String::new(),
-            String::from("Senior"),
-        )
-    }
-
-    #[test]
-    fn should_merge_same_competitor() {
-        let expected_competitor_name = CompetitorName::new(String::from("John Doe"));
-
-        let mut results = vec![];
-        results.push(ConventionResults::new("convention 1", vec![create_result_entry("John Doe")]));
-        results.push(ConventionResults::new("convention 2", vec![create_result_entry("John Doe")]));
-
-        let competitors = ResultEntry::compute_competitors(&results);
-        let competitors: Vec<&CompetitorName> = competitors.into_iter().collect();
-        assert_eq!(competitors, vec![&expected_competitor_name]);
+    impl ResultEntry {
+        pub fn create_result_entry(name: &str) -> ResultEntry {
+            ResultEntry::new(
+                1,
+                CompetitorName::new(String::from(name)),
+                Gender::from_string("Male").unwrap(),
+                22,
+                String::from("100m"),
+                Place::from_string("1").unwrap(),
+                ResultType::from_string("Overall").unwrap(),
+                String::from("00:14:99"),
+                String::new(),
+                String::from("Senior"),
+            )
+        }
     }
 }
