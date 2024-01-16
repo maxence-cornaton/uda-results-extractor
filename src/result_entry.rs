@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use derive_getters::Getters;
 
 use crate::competitor_name::CompetitorName;
+use crate::place::Place;
 
 #[derive(Debug, Getters, Clone)]
 pub struct ResultEntry {
@@ -12,9 +13,8 @@ pub struct ResultEntry {
     gender: String,
     age: u8,
     competition: String,
-    // FIXME: use enum to represent all possible places (u8, "DQ", "DNF")
-    place: String,
-    // FIXME: use enum to represent all possible result types ("AgeGroup", "Overall"
+    place: Place,
+    // FIXME: use enum to represent all possible result types ("AgeGroup", "Overall")
     result_type: String,
     // FIXME: use enum to represent all possible results
     result: String,
@@ -25,17 +25,16 @@ pub struct ResultEntry {
 impl ResultEntry {
     fn new(
         id: u8,
-        name: String,
+        name: CompetitorName,
         gender: String,
         age: u8,
         competition: String,
-        place: String,
+        place: Place,
         result_type: String,
         result: String,
         details: String,
         age_group: String,
     ) -> ResultEntry {
-        let name = CompetitorName::new(name.to_string());
         ResultEntry { id, name, gender, age, competition, place, result_type, result, details, age_group }
     }
 
@@ -51,6 +50,17 @@ impl ResultEntry {
         details: &str,
         age_group: &str,
     ) -> Result<Vec<ResultEntry>, String> {
+        let place = match Place::from_string(place) {
+            Ok(place) => place,
+            Err(error) => {
+                let error_message = format!(
+                    "Invalid line, invalid place [ids: {:?}, names: {:?}, place: {}]\nCaused by: {}",
+                    ids, names, place, error
+                );
+                return Err(String::from(error_message));
+            }
+        };
+
         let ids = ids.replace(" ", "");
         let ids: Vec<&str> = ids
             .split(',')
@@ -59,8 +69,6 @@ impl ResultEntry {
             .split(',')
             .map(|s| String::from(s))
             .collect();
-
-        let mut result_entries = vec![];
 
         let ids_count = ids.len();
         let names_count = names.len();
@@ -71,6 +79,7 @@ impl ResultEntry {
             return Err(String::from(error_message));
         }
 
+        let mut result_entries = vec![];
         for i in 0..names_count {
             let id = match ids.get(i).unwrap().parse::<u8>() {
                 Ok(id) => id,
@@ -81,15 +90,15 @@ impl ResultEntry {
                 }
             };
             let name = names.get(i).unwrap();
-
             let name = CompetitorName::new(name.to_string());
+
             result_entries.push(ResultEntry {
                 id,
                 name,
                 gender: String::from(gender),
                 age,
                 competition: String::from(competition),
-                place: String::from(place),
+                place: place.clone(),
                 result_type: String::from(result_type),
                 result: String::from(result),
                 details: String::from(details),
@@ -117,16 +126,17 @@ mod tests {
     use std::collections::HashMap;
 
     use crate::competitor_name::CompetitorName;
+    use crate::place::Place;
     use crate::result_entry::ResultEntry;
 
     fn create_result_entry(name: &str) -> ResultEntry {
         ResultEntry::new(
             1,
-            String::from(name),
+            CompetitorName::new(String::from(name)),
             String::from("Male"),
             22,
             String::from("100m"),
-            String::from("1"),
+            Place::from_string("1").unwrap(),
             String::from("Overall"),
             String::from("00:14:99"),
             String::new(),
