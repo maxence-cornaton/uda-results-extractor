@@ -13,6 +13,6 @@ impl ResultType {
             return Ok(ResultType { result_type: authorized_result_type.copied().unwrap().to_string() });
         }
 
-        Err(format!("Unknown result type [result_type:{}]", result_type))
+        Err(format!("Unknown result type [result_type: {}]", result_type))
     }
 }

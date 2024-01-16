@@ -8,6 +8,7 @@ mod result_entry;
 mod competitor_name;
 mod place;
 mod result_type;
+mod gender;
 
 fn main() {
     let filenames = vec![

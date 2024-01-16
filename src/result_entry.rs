@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use derive_getters::Getters;
 
 use crate::competitor_name::CompetitorName;
+use crate::gender::Gender;
 use crate::place::Place;
 use crate::result_type::ResultType;
 
@@ -10,12 +11,10 @@ use crate::result_type::ResultType;
 pub struct ResultEntry {
     id: u8,
     name: CompetitorName,
-    // FIXME: use enum to represent all possible genders ("Male", "Female")
-    gender: String,
+    gender: Gender,
     age: u8,
     competition: String,
     place: Place,
-    // FIXME: use enum to represent all possible result types ("AgeGroup", "Overall")
     result_type: ResultType,
     result: String,
     details: String,
@@ -26,7 +25,7 @@ impl ResultEntry {
     fn new(
         id: u8,
         name: CompetitorName,
-        gender: String,
+        gender: Gender,
         age: u8,
         competition: String,
         place: Place,
@@ -50,6 +49,16 @@ impl ResultEntry {
         details: &str,
         age_group: &str,
     ) -> Result<Vec<ResultEntry>, String> {
+        let gender = match Gender::from_string(gender) {
+            Ok(gender) => gender,
+            Err(error) => {
+                let error_message = format!(
+                    "Invalid line, invalid gender [ids: {:?}, names: {:?}, gender: {}]\nCaused by: {}",
+                    ids, names, gender, error
+                );
+                return Err(String::from(error_message));
+            }
+        };
         let place = match Place::from_string(place) {
             Ok(place) => place,
             Err(error) => {
@@ -105,7 +114,7 @@ impl ResultEntry {
             result_entries.push(ResultEntry {
                 id,
                 name,
-                gender: String::from(gender),
+                gender: gender.clone(),
                 age,
                 competition: String::from(competition),
                 place: place.clone(),
@@ -136,6 +145,7 @@ mod tests {
     use std::collections::HashMap;
 
     use crate::competitor_name::CompetitorName;
+    use crate::gender::Gender;
     use crate::place::Place;
     use crate::result_entry::ResultEntry;
     use crate::result_type::ResultType;
@@ -144,7 +154,7 @@ mod tests {
         ResultEntry::new(
             1,
             CompetitorName::new(String::from(name)),
-            String::from("Male"),
+            Gender::from_string("Male").unwrap(),
             22,
             String::from("100m"),
             Place::from_string("1").unwrap(),
