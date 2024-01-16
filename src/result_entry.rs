@@ -4,8 +4,9 @@ use derive_getters::Getters;
 
 use crate::competitor_name::CompetitorName;
 use crate::place::Place;
+use crate::result_type::ResultType;
 
-#[derive(Debug, Getters, Clone)]
+#[derive(Debug, Getters)]
 pub struct ResultEntry {
     id: u8,
     name: CompetitorName,
@@ -15,8 +16,7 @@ pub struct ResultEntry {
     competition: String,
     place: Place,
     // FIXME: use enum to represent all possible result types ("AgeGroup", "Overall")
-    result_type: String,
-    // FIXME: use enum to represent all possible results
+    result_type: ResultType,
     result: String,
     details: String,
     age_group: String,
@@ -30,7 +30,7 @@ impl ResultEntry {
         age: u8,
         competition: String,
         place: Place,
-        result_type: String,
+        result_type: ResultType,
         result: String,
         details: String,
         age_group: String,
@@ -56,6 +56,16 @@ impl ResultEntry {
                 let error_message = format!(
                     "Invalid line, invalid place [ids: {:?}, names: {:?}, place: {}]\nCaused by: {}",
                     ids, names, place, error
+                );
+                return Err(String::from(error_message));
+            }
+        };
+        let result_type = match ResultType::from_string(result_type) {
+            Ok(result_type) => result_type,
+            Err(error) => {
+                let error_message = format!(
+                    "Invalid line, invalid result_type [ids: {:?}, names: {:?}, result_type: {}]\nCaused by: {}",
+                    ids, names, result_type, error
                 );
                 return Err(String::from(error_message));
             }
@@ -99,7 +109,7 @@ impl ResultEntry {
                 age,
                 competition: String::from(competition),
                 place: place.clone(),
-                result_type: String::from(result_type),
+                result_type: result_type.clone(),
                 result: String::from(result),
                 details: String::from(details),
                 age_group: String::from(age_group),
@@ -128,6 +138,7 @@ mod tests {
     use crate::competitor_name::CompetitorName;
     use crate::place::Place;
     use crate::result_entry::ResultEntry;
+    use crate::result_type::ResultType;
 
     fn create_result_entry(name: &str) -> ResultEntry {
         ResultEntry::new(
@@ -137,7 +148,7 @@ mod tests {
             22,
             String::from("100m"),
             Place::from_string("1").unwrap(),
-            String::from("Overall"),
+            ResultType::from_string("Overall").unwrap(),
             String::from("00:14:99"),
             String::new(),
             String::from("Senior"),

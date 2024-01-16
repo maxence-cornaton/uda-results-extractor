@@ -7,6 +7,7 @@ use crate::result_entry::ResultEntry;
 mod result_entry;
 mod competitor_name;
 mod place;
+mod result_type;
 
 fn main() {
     let filenames = vec![
