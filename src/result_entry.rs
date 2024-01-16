@@ -121,6 +121,7 @@ impl ResultEntry {
 #[cfg(test)]
 mod tests {
     use crate::competitor_name::CompetitorName;
+    use crate::convention_results::ConventionResults;
     use crate::gender::Gender;
     use crate::place::Place;
     use crate::result_entry::ResultEntry;
@@ -141,16 +142,16 @@ mod tests {
         )
     }
 
-    // #[test]
-    // fn should_merge_same_competitor() {
-    //     let expected_competitor_name = CompetitorName::new(String::from("John Doe"));
-    //
-    //     let mut results = HashMap::new();
-    //     results.insert(String::from("convention 1"), vec![create_result_entry("John Doe")]);
-    //     results.insert(String::from("convention 2"), vec![create_result_entry("John Doe")]);
-    //
-    //     let competitors = ResultEntry::compute_competitors(&results);
-    //     let competitors: Vec<&CompetitorName> = competitors.into_iter().collect();
-    //     assert_eq!(competitors, vec![&expected_competitor_name]);
-    // }
+    #[test]
+    fn should_merge_same_competitor() {
+        let expected_competitor_name = CompetitorName::new(String::from("John Doe"));
+
+        let mut results = vec![];
+        results.push(ConventionResults::new("convention 1", vec![create_result_entry("John Doe")]));
+        results.push(ConventionResults::new("convention 2", vec![create_result_entry("John Doe")]));
+
+        let competitors = ResultEntry::compute_competitors(&results);
+        let competitors: Vec<&CompetitorName> = competitors.into_iter().collect();
+        assert_eq!(competitors, vec![&expected_competitor_name]);
+    }
 }
