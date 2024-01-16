@@ -1,5 +1,3 @@
-use calamine::Reader;
-
 use crate::convention_results::ConventionResults;
 
 mod result_entry;
