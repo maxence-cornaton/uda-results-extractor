@@ -9,7 +9,7 @@ use crate::result_type::ResultType;
 
 #[derive(Debug, Getters)]
 pub struct ResultEntry {
-    id: u8,
+    id: u16,
     name: CompetitorName,
     gender: Gender,
     age: u8,
@@ -23,7 +23,7 @@ pub struct ResultEntry {
 
 impl ResultEntry {
     fn new(
-        id: u8,
+        id: u16,
         name: CompetitorName,
         gender: Gender,
         age: u8,
@@ -49,36 +49,9 @@ impl ResultEntry {
         details: &str,
         age_group: &str,
     ) -> Result<Vec<ResultEntry>, String> {
-        let gender = match Gender::from_string(gender) {
-            Ok(gender) => gender,
-            Err(error) => {
-                let error_message = format!(
-                    "Invalid line, invalid gender [ids: {:?}, names: {:?}, gender: {}]\nCaused by: {}",
-                    ids, names, gender, error
-                );
-                return Err(String::from(error_message));
-            }
-        };
-        let place = match Place::from_string(place) {
-            Ok(place) => place,
-            Err(error) => {
-                let error_message = format!(
-                    "Invalid line, invalid place [ids: {:?}, names: {:?}, place: {}]\nCaused by: {}",
-                    ids, names, place, error
-                );
-                return Err(String::from(error_message));
-            }
-        };
-        let result_type = match ResultType::from_string(result_type) {
-            Ok(result_type) => result_type,
-            Err(error) => {
-                let error_message = format!(
-                    "Invalid line, invalid result_type [ids: {:?}, names: {:?}, result_type: {}]\nCaused by: {}",
-                    ids, names, result_type, error
-                );
-                return Err(String::from(error_message));
-            }
-        };
+        let gender = Gender::from_string(gender)?;
+        let place = Place::from_string(place)?;
+        let result_type = ResultType::from_string(result_type)?;
 
         let ids = ids.replace(" ", "");
         let ids: Vec<&str> = ids
@@ -100,7 +73,7 @@ impl ResultEntry {
 
         let mut result_entries = vec![];
         for i in 0..names_count {
-            let id = match ids.get(i).unwrap().parse::<u8>() {
+            let id = match ids.get(i).unwrap().parse::<u16>() {
                 Ok(id) => id,
                 Err(_) => {
                     let error_message = format!("Expected ID as integer, but got something else [ids: {:?}, names: {:?}, wrong_id: {}]",

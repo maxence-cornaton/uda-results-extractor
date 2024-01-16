@@ -1,4 +1,4 @@
-const AUTHORIZED_GENDER: [&str; 2] = ["Male", "Female"];
+const AUTHORIZED_GENDER: [&str; 4] = ["Male", "Female", "(mixed)", "(n/a)"];
 
 #[derive(Debug, Clone)]
 pub struct Gender {
@@ -13,6 +13,6 @@ impl Gender {
             return Ok(Gender { gender: authorized_gender.copied().unwrap().to_string() });
         }
 
-        Err(format!("Unknown gender [gender: {}]", gender))
+        Err(format!("Invalid gender [gender: {}]", gender))
     }
 }

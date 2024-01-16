@@ -18,6 +18,6 @@ impl Place {
             return Ok(Place::Disqualified(place));
         }
 
-        Err(format!("Unknown place type [place: {}]", place))
+        Err(format!("Invalid place type [place: {}]", place))
     }
 }
