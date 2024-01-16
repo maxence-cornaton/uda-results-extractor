@@ -53,13 +53,17 @@ impl ResultEntry {
         let place = Place::from_string(place)?;
         let result_type = ResultType::from_string(result_type)?;
 
+        // Split ids as &str into list of ids
         let ids = ids.replace(" ", "");
         let ids: Vec<&str> = ids
             .split(',')
             .collect();
-        let names: Vec<String> = names.replace(" ", "")
-            .split(',')
-            .map(|s| String::from(s))
+
+        // Split names as &str into list of names
+        // /!\ Each entry can be a single name, a comma-separated list of names or a team name
+        let names: Vec<String> = names
+            .split(" - ")
+            .map(|s| String::from(s.trim()))
             .collect();
 
         let ids_count = ids.len();

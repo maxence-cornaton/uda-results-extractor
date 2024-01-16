@@ -7,8 +7,12 @@ pub struct CompetitorName {
 
 impl CompetitorName {
     pub fn new(name: String) -> Self {
-        let mut name_parts: Vec<String> = name.split(' ').map(|s| s.to_string()).collect();
+        let mut name_parts: Vec<String> = name
+            .split(' ')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string())
+            .collect();
         name_parts.sort();
-        Self { name_parts }
+        CompetitorName { name_parts }
     }
 }
