@@ -64,8 +64,8 @@ mod tests {
         let expected_competitor_name = CompetitorName::new(String::from("John Doe"));
 
         let mut results = vec![];
-        results.push(ConventionResults::new("convention 1", vec![ResultEntry::create_result_entry("John Doe")]));
-        results.push(ConventionResults::new("convention 2", vec![ResultEntry::create_result_entry("John Doe")]));
+        results.push(ConventionResults { name: String::from("convention 1"), results: vec![ResultEntry::create_result_entry("John Doe")] });
+        results.push(ConventionResults { name: String::from("convention 2"), results: vec![ResultEntry::create_result_entry("John Doe")] });
 
         let competitors = ConventionResults::compute_competitors(&results);
         let competitors: Vec<&CompetitorName> = competitors.into_iter().collect();
