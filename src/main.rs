@@ -6,6 +6,10 @@ mod place;
 mod result_type;
 mod gender;
 mod convention_results;
+mod competitor;
+mod competition_result;
+mod competition;
+mod convention;
 
 fn main() {
     let filenames = vec![

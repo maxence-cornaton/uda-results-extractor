@@ -1,6 +1,9 @@
 use derive_getters::Getters;
 
+use crate::competition::Competition;
+use crate::competition_result::CompetitionResult;
 use crate::competitor_name::CompetitorName;
+use crate::convention::Convention;
 use crate::gender::Gender;
 use crate::place::Place;
 use crate::result_type::ResultType;
@@ -12,12 +15,7 @@ pub struct ResultEntry {
     name: CompetitorName,
     gender: Gender,
     age: u8,
-    competition: String,
-    place: Place,
-    result_type: ResultType,
-    result: String,
-    details: String,
-    age_group: String,
+    competition_result: CompetitionResult,
 }
 
 impl ResultEntry {
@@ -26,14 +24,9 @@ impl ResultEntry {
         name: CompetitorName,
         gender: Gender,
         age: u8,
-        competition: String,
-        place: Place,
-        result_type: ResultType,
-        result: String,
-        details: String,
-        age_group: String,
+        competition_result: CompetitionResult,
     ) -> ResultEntry {
-        ResultEntry { id, name, gender, age, competition, place, result_type, result, details, age_group }
+        ResultEntry { id, name, gender, age, competition_result }
     }
 
     /// A result line may includes multiple competitors (e.g., pair freestyle or relay race).
@@ -52,6 +45,7 @@ impl ResultEntry {
         age_group: &str,
     ) -> Result<Vec<ResultEntry>, String> {
         let gender = Gender::from_string(gender)?;
+        let competition = Competition::new(Convention::new(String::from("FIXME")), String::from(competition)); // FIXME
         let place = Place::from_string(place)?;
         let result_type = ResultType::from_string(result_type)?;
 
@@ -90,17 +84,21 @@ impl ResultEntry {
             let name = names.get(i).unwrap();
             let name = CompetitorName::new(name);
 
+            let competition_result = CompetitionResult::new(
+                competition.clone(),
+                place.clone(),
+                result_type.clone(),
+                String::from(result),
+                String::from(details),
+                String::from(age_group),
+            );
+
             result_entries.push(ResultEntry {
                 id,
                 name,
                 gender: gender.clone(),
                 age,
-                competition: String::from(competition),
-                place: place.clone(),
-                result_type: result_type.clone(),
-                result: String::from(result),
-                details: String::from(details),
-                age_group: String::from(age_group),
+                competition_result,
             });
         }
 
@@ -110,11 +108,10 @@ impl ResultEntry {
 
 #[cfg(test)]
 mod tests {
+    use crate::competition_result::CompetitionResult;
     use crate::competitor_name::CompetitorName;
     use crate::gender::Gender;
-    use crate::place::Place;
     use crate::result_entry::ResultEntry;
-    use crate::result_type::ResultType;
 
     impl ResultEntry {
         pub fn create_result_entry(name: &str) -> ResultEntry {
@@ -123,12 +120,7 @@ mod tests {
                 CompetitorName::new(name),
                 Gender::from_string("Male").unwrap(),
                 22,
-                String::from("100m"),
-                Place::from_string("1").unwrap(),
-                ResultType::from_string("Overall").unwrap(),
-                String::from("00:14:99"),
-                String::new(),
-                String::from("Senior"),
+                CompetitionResult::create_test_instance(),
             )
         }
     }
