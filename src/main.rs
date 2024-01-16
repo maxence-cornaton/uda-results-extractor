@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
+use crate::convention_results::ConventionResults;
 use crate::result_entry::ResultEntry;
 
 mod result_entry;
@@ -9,6 +8,7 @@ mod competitor_name;
 mod place;
 mod result_type;
 mod gender;
+mod convention_results;
 
 fn main() {
     let filenames = vec![
@@ -16,10 +16,10 @@ fn main() {
         String::from("unicon20.xls"),
     ];
 
-    let mut all_results = HashMap::new();
+    let mut all_results = vec![];
     for filename in filenames {
         match open_results(&filename) {
-            Ok(convention_results) => { all_results.insert(filename, convention_results); }
+            Ok(convention_results) => { all_results.push(convention_results); }
             Err(error) => { eprintln!("{}", error); }
         };
     }
@@ -29,7 +29,7 @@ fn main() {
     println!("{:?}", competitors);
 }
 
-fn open_results(filename: &String) -> Result<Vec<ResultEntry>, Error> {
+fn open_results(filename: &String) -> Result<ConventionResults, Error> {
     let path = format!("{}/resources/{}", env!("CARGO_MANIFEST_DIR"), filename);
     let mut workbook: Xls<_> = open_workbook(path)?;
     let range = workbook.worksheet_range("Worksheet1")
@@ -47,6 +47,6 @@ fn open_results(filename: &String) -> Result<Vec<ResultEntry>, Error> {
         };
     }
 
-    Ok(results)
+    Ok(ConventionResults::new(filename, results))
 }
 

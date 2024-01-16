@@ -13,6 +13,6 @@ impl CompetitorName {
             .map(|s| s.to_string())
             .collect();
         name_parts.sort();
-        CompetitorName { name_parts }
+        Self { name_parts }
     }
 }

@@ -6,11 +6,11 @@ pub struct Gender {
 }
 
 impl Gender {
-    pub fn from_string(gender: &str) -> Result<Gender, String> {
+    pub fn from_string(gender: &str) -> Result<Self, String> {
         let gender = gender.to_lowercase();
         let authorized_gender = AUTHORIZED_GENDER.iter().find(|p| p.to_string().to_lowercase() == gender);
         if authorized_gender.is_some() {
-            return Ok(Gender { gender: authorized_gender.copied().unwrap().to_string() });
+            return Ok(Self { gender: authorized_gender.copied().unwrap().to_string() });
         }
 
         Err(format!("Invalid gender [gender: {}]", gender))

@@ -6,7 +6,7 @@ pub struct ResultType {
 }
 
 impl ResultType {
-    pub fn from_string(result_type: &str) -> Result<ResultType, String> {
+    pub fn from_string(result_type: &str) -> Result<Self, String> {
         let result_type = result_type.to_lowercase();
         let authorized_result_type = AUTHORIZED_RESULT_TYPES.iter().find(|p| p.to_string().to_lowercase() == result_type);
         if authorized_result_type.is_some() {
