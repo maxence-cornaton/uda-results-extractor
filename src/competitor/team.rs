@@ -7,3 +7,9 @@ pub struct Team {
     name: String,
     members: Vec<Competitor>,
 }
+
+impl Team {
+    pub fn new(name: String, members: Vec<Competitor>) -> Self {
+        Self { name, members }
+    }
+}

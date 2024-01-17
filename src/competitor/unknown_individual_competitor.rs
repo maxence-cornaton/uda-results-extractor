@@ -1,5 +1,7 @@
+use derive_getters::Getters;
+
 /// A competitor that takes part only to team competitions may be unknown (no name, no gender, no age)
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(Debug, Getters, PartialEq, Eq, Hash, Copy, Clone)]
 pub struct UnknownIndividualCompetitor {
     id: u16,
 }

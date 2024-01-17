@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 
+use derive_getters::Getters;
+
 use crate::competition::competition::Competition;
 use crate::competition::competition_result::CompetitionResult;
 use crate::competitor::competitor::Competitor;
 use crate::convention::convention::Convention;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Getters)]
 pub struct Registration {
     competitor: Competitor,
     convention: Convention,
