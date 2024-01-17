@@ -2,8 +2,12 @@ use std::collections::HashMap;
 
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
+use crate::competitor::competitor::Competitor;
 use crate::convention::convention::Convention;
+use crate::person::person::{create_people_from_registrations, Person};
+use crate::person::person_name::PersonName;
 use crate::raw_result::raw_result::{RawResult, read_registrations_from_raw_results_lines};
+use crate::registration::registration::Registration;
 
 mod competition;
 mod convention;
@@ -18,6 +22,7 @@ fn main() {
     conventions.insert("CFM 2023", "cfm2023.xls");
     conventions.insert("Unicon 20", "unicon20.xls");
 
+    let mut all_registrations = vec![];
     for (convention_name, file_name) in conventions {
         let convention = Convention::new(String::from(convention_name));
         let raw_results = match load_raw_results(file_name) {
@@ -27,11 +32,12 @@ fn main() {
                 continue;
             }
         };
-        let registrations = read_registrations_from_raw_results_lines(&convention, &raw_results);
-        for registration in registrations {
-            println!("{:?}", registration);
-        }
+        let mut registrations = read_registrations_from_raw_results_lines(&convention, &raw_results);
+        all_registrations.append(&mut registrations);
     }
+
+    let people = create_people_from_registrations(&all_registrations);
+    filter_people_on_name(&people, "Maxence Cornaton");
 }
 
 fn load_raw_results(file_name: &str) -> Result<Vec<RawResult>, Error> {
@@ -51,4 +57,45 @@ fn load_raw_results(file_name: &str) -> Result<Vec<RawResult>, Error> {
     }
 
     Ok(raw_results)
+}
+
+fn filter_registrations_on_competitor_name(registrations: &Vec<Registration>, competitor_name: &str) {
+    for registration in registrations {
+        match registration.competitor() {
+            Competitor::IndividualCompetitor(competitor) => {
+                if competitor.name().to_lowercase() == competitor_name.to_lowercase() {
+                    println!("{:?}", registration);
+                }
+            }
+            Competitor::Team(_) => {}
+            Competitor::UnknownIndividualCompetitor(_) => {}
+        }
+    }
+}
+
+fn filter_registrations_on_id(registrations: &Vec<Registration>, id: &u16) {
+    for registration in registrations {
+        match registration.competitor() {
+            Competitor::IndividualCompetitor(competitor) => {
+                if competitor.id() == id {
+                    println!("{:?}", registration);
+                }
+            }
+            Competitor::Team(_) => {}
+            Competitor::UnknownIndividualCompetitor(competitor) => {
+                if competitor.id() == id {
+                    println!("{:?}", registration);
+                }
+            }
+        }
+    }
+}
+
+fn filter_people_on_name(people: &Vec<Person>, name: &str) {
+    let name = PersonName::new(name);
+    for person in people {
+        if person.name() == &name {
+            println!("{} => {:?}", person.name().name(), person.registrations());
+        }
+    }
 }
