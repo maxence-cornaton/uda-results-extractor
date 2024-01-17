@@ -33,18 +33,24 @@ classDiagram
         <<enumeration>>
         Team: Team
         IndividualCompetitor: IndividualCompetitor
+        UnknownIndividualCompetitor: UnknownIndividualCompetitor
     }
 
     class Team {
         name: String
-        members: Vec~IndividualCompetitor~
+        members: Vec~Competitor~
     }
 
     class IndividualCompetitor {
         id: u16
+        name: PersonName
     %% gender and age depends on the competition, so can't be added to `Person`
         gender: Gender
         age: u8
+    }
+
+    class UnknownIndividualCompetitor {
+        id: u16
     }
 
 %%    note for Gender "Should be one of [Male, Female]"
@@ -90,10 +96,18 @@ classDiagram
     Person *-- PersonName
     Competitor --> Team
     Competitor --> IndividualCompetitor
-    Team o-- IndividualCompetitor
+    Competitor --> UnknownIndividualCompetitor
+    Team o-- Competitor
     IndividualCompetitor <-- Gender
     CompetitionResult *-- Place
     CompetitionResult *-- ResultType
     CompetitionResult *-- ResultValue
     CompetitionResult *-- AgeGroup
 ```
+
+## Procedure to load a results file
+
+1. Create convention
+2. Load all competitions for convention
+3. Load all competitors
+4. For each competitor, load all results

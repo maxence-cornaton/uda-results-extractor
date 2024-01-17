@@ -2,12 +2,12 @@ use derive_getters::Getters;
 use deunicode::deunicode;
 
 #[derive(Debug, Getters, Eq, Hash, Clone)]
-pub struct CompetitorName {
+pub struct PersonName {
     name: String,
     name_parts: Vec<String>,
 }
 
-impl CompetitorName {
+impl PersonName {
     pub fn new(name: &str) -> Self {
         let mut name_parts: Vec<String> = name
             .split(' ')
@@ -20,8 +20,8 @@ impl CompetitorName {
     }
 }
 
-impl PartialEq for CompetitorName {
-    /// [CompetitorName]s are considered as equal if their name is strictly equal
+impl PartialEq for PersonName {
+    /// [PersonName]s are considered as equal if their name is strictly equal
     /// or if each part of both name is equal after accents have been replaced by their non-accentuated letters.
     fn eq(&self, other: &Self) -> bool {
         return self.name == other.name
@@ -31,26 +31,26 @@ impl PartialEq for CompetitorName {
 
 #[cfg(test)]
 mod tests {
-    use crate::competitor_name::CompetitorName;
+    use crate::person::person_name::PersonName;
 
     #[test]
     fn should_be_equal_when_same_name() {
         let name = "John Doe";
-        assert_eq!(CompetitorName::new(name), CompetitorName::new(name));
+        assert_eq!(PersonName::new(name), PersonName::new(name));
     }
 
     #[test]
     fn should_be_equal_when_same_name_but_more_spaces() {
-        assert_eq!(CompetitorName::new("John Doe"), CompetitorName::new("  John    Doe "));
+        assert_eq!(PersonName::new("John Doe"), PersonName::new("  John    Doe "));
     }
 
     #[test]
     fn should_be_equal_when_same_name_but_reversed() {
-        assert_eq!(CompetitorName::new("John Doe"), CompetitorName::new("Doe John"));
+        assert_eq!(PersonName::new("John Doe"), PersonName::new("Doe John"));
     }
 
     #[test]
     fn should_be_equal_when_same_name_with_accent() {
-        assert_eq!(CompetitorName::new("John Doe"), CompetitorName::new("Jôhn Doé"));
+        assert_eq!(PersonName::new("John Doe"), PersonName::new("Jôhn Doé"));
     }
 }
