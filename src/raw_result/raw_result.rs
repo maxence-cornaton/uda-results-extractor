@@ -72,7 +72,7 @@ pub fn read_registrations_from_raw_results_lines(convention: &Convention, raw_re
                 let registration = Registration::new(competitor, convention.clone(), results);
                 registrations.insert(id, registration);
             } else {
-                let mut registration = registration.unwrap();
+                let registration = registration.unwrap();
                 registration.add_result(competition.clone(), competition_result.clone());
             }
         }
@@ -176,7 +176,7 @@ fn split_ids(ids: &str) -> (Vec<u16>, Vec<String>) {
 fn read_competition_result_from_raw_result(raw_result: &RawResult) -> Result<CompetitionResult, String> {
     let place = Place::from_string(raw_result.place())?;
     let result_type = ResultType::from_string(raw_result.result_type())?;
-    let result = ResultValue::Some(raw_result.result().clone());
+    let result = ResultValue::from_string(raw_result.result());
     let details = raw_result.details();
     let age_group = AgeGroup::from_string(raw_result.age_group());
 

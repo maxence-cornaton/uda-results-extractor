@@ -18,7 +18,7 @@ impl Registration {
     }
 
     pub fn add_result(self: &mut Self, competition: Competition, competition_result: CompetitionResult) {
-        let mut known_competition = self.competitions.get_mut(&competition);
+        let known_competition = self.competitions.get_mut(&competition);
         if known_competition.is_none() {
             self.competitions.insert(competition, vec![competition_result]);
         } else {
