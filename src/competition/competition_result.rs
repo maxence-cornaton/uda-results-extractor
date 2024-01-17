@@ -9,24 +9,24 @@ use crate::result::result_value::ResultValue;
 pub struct CompetitionResult {
     place: Place,
     result_type: ResultType,
-    result: ResultValue,
-    details: String,
-    age_group: AgeGroup,
+    result: Option<ResultValue>,
+    details: Option<String>,
+    age_group: Option<AgeGroup>,
 }
 
 impl CompetitionResult {
     pub fn new(
         place: Place,
         result_type: ResultType,
-        result: ResultValue,
-        details: &str,
-        age_group: AgeGroup,
+        result: Option<ResultValue>,
+        details: Option<String>,
+        age_group: Option<AgeGroup>,
     ) -> Self {
         Self {
             place,
             result_type,
             result,
-            details: String::from(details),
+            details,
             age_group,
         }
     }
@@ -45,10 +45,10 @@ mod tests {
             CompetitionResult::new(
                 Place::from_string("1").unwrap(),
                 ResultType::from_string("Overall").unwrap(),
-                ResultValue::from_string("00:14:99"),
-                "",
-                AgeGroup::from_string("Senior"),
-            )
+                Some(ResultValue::from_string("00:14:99")),
+                None,
+                Some(AgeGroup::from_string("Senior")),
+            );
         }
     }
 }

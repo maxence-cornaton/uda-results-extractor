@@ -176,9 +176,21 @@ fn split_ids(ids: &str) -> (Vec<u16>, Vec<String>) {
 fn read_competition_result_from_raw_result(raw_result: &RawResult) -> Result<CompetitionResult, String> {
     let place = Place::from_string(raw_result.place())?;
     let result_type = ResultType::from_string(raw_result.result_type())?;
-    let result = ResultValue::from_string(raw_result.result());
-    let details = raw_result.details();
-    let age_group = AgeGroup::from_string(raw_result.age_group());
+    let result = if raw_result.result().is_empty() {
+        None
+    } else {
+        Some(ResultValue::from_string(raw_result.result()))
+    };
+    let details = if raw_result.details().is_empty() {
+        None
+    } else {
+        Some(raw_result.details().clone())
+    };
+    let age_group = if raw_result.age_group().is_empty() {
+        None
+    } else {
+        Some(AgeGroup::from_string(raw_result.age_group()))
+    };
 
     Ok(CompetitionResult::new(place, result_type, result, details, age_group))
 }
