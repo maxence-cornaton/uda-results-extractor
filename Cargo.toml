@@ -11,3 +11,4 @@ serde = { version = "1.0.195", features = ["derive"] }
 derive-getters = "0.3.0"
 deunicode = "1.4.2"
 log = "0.4.20"
+regex = "1.10.2"
