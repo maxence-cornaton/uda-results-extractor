@@ -48,7 +48,7 @@ mod tests {
                 Some(ResultValue::from_string("00:14:99")),
                 None,
                 Some(AgeGroup::from_string("Senior")),
-            );
+            )
         }
     }
 }
