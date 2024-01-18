@@ -29,19 +29,22 @@ async fn main() {
             eprintln!("No convention to deal with, can't continue...");
             return;
         }
-        Some(conventions_tag) => { conventions_tag.split(',').map(str::to_string).collect() }
+        Some(conventions_tag) => { conventions_tag.split(',').map(str::trim).map(str::to_string).collect() }
     };
     let loaded_conventions = load_conventions(DATA_FOLDER);
+    let mut conventions = HashSet::from_iter(loaded_conventions.iter().map(|(_, convention)| convention));
     let conventions_to_download = compute_conventions_to_download(&loaded_conventions, &conventions_tag);
-
-    let data = download_data(&conventions_to_download).await;
-    if data.is_err() {
-        eprintln!("No data, can't continue...");
-        return;
-    }
-    let downloaded_conventions = data.unwrap();
-    let mut conventions = HashSet::from_iter(downloaded_conventions.iter());
-    conventions.extend(loaded_conventions.iter().map(|(tag, convention)| convention));
+    let downloaded_conventions = if !conventions_to_download.is_empty() {
+        let data = download_data(&conventions_to_download).await;
+        if data.is_err() {
+            eprintln!("No data, can't continue...");
+            return;
+        }
+        data.unwrap()
+    } else {
+        vec![]
+    };
+    conventions.extend(&downloaded_conventions);
 
     let dump_result = dump_conventions(DATA_FOLDER, &conventions);
     if dump_result.is_err() {
