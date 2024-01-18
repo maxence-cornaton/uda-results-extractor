@@ -5,6 +5,7 @@ use reqwest::{Client, StatusCode};
 use scraper::{Html, Selector};
 use tokio::join;
 
+use crate::convention::convention::Convention;
 use crate::utils::credentials::Credentials;
 
 const CONVENTIONS_TAG: [&str; 2] = [
@@ -21,7 +22,7 @@ fn build_client() -> Client {
         .unwrap()
 }
 
-pub async fn download_data() -> Result<Vec<[String; 2]>, ()> {
+pub async fn download_data(conventions_tag: &Vec<String>) -> Result<Vec<Convention>, ()> {
     let credentials = Credentials::load_credentials()
         .or_else(|error| {
             eprintln!("Can't download data because no credential: {error}");
@@ -29,7 +30,7 @@ pub async fn download_data() -> Result<Vec<[String; 2]>, ()> {
         })?;
 
     let mut downloaded_conventions = vec![];
-    for convention_tag in CONVENTIONS_TAG {
+    for convention_tag in conventions_tag {
         match create_folder_for_convention(&convention_tag) {
             Ok(_) => {}
             Err(_) => { continue; }
@@ -40,7 +41,7 @@ pub async fn download_data() -> Result<Vec<[String; 2]>, ()> {
         if download_result.is_ok() {
             let convention_name = download_result.unwrap();
             println!("Convention has been successfully downloaded [convention: {}]", convention_name);
-            downloaded_conventions.push([String::from(convention_tag), convention_name]);
+            downloaded_conventions.push(Convention::new(convention_tag.to_string(), convention_name));
         } else {
             let errors = download_result.unwrap_err();
             eprintln!("Errors encountered while downloading convention data [convention: {}]", convention_tag);

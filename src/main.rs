@@ -1,12 +1,12 @@
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
 use crate::competitor::competitor::Competitor;
-use crate::convention::convention::Convention;
 use crate::download::{DATA_FOLDER, download_data};
 use crate::person::person::{create_people_from_registrations, Person};
 use crate::person::person_name::PersonName;
 use crate::raw_result::raw_result::{RawResult, read_registrations_from_raw_results_lines};
 use crate::registration::registration::Registration;
+use crate::utils::env_manager::retrieve_env_value;
 
 mod competition;
 mod convention;
@@ -20,7 +20,15 @@ mod utils;
 
 #[tokio::main]
 async fn main() {
-    let data = download_data().await;
+    let conventions_tag = match retrieve_env_value("CONVENTIONS") {
+        None => {
+            eprintln!("No convention to deal with, can't continue...");
+            return;
+        }
+        Some(conventions_tag) => { conventions_tag.split(',').map(str::to_string).collect() }
+    };
+
+    let data = download_data(&conventions_tag).await;
     if data.is_err() {
         eprintln!("No data, can't continue...");
         return;
@@ -28,13 +36,12 @@ async fn main() {
     let conventions = data.unwrap();
 
     let mut all_registrations = vec![];
-    for convention_details in conventions {
-        let convention = Convention::new(convention_details[1].clone());
-        let file_name = format!("{}/{}/results.xls", DATA_FOLDER, convention_details[0]);
+    for convention in conventions {
+        let file_name = format!("{}/{}/results.xls", DATA_FOLDER, convention.tag());
         let raw_results = match load_raw_results(&file_name) {
             Ok(raw_results) => { raw_results }
             Err(error) => {
-                eprintln!("Can't load raw results [convention: {}, filename: {file_name}]", convention_details[1]);
+                eprintln!("Can't load raw results [convention: {}, filename: {file_name}]", convention.name());
                 eprintln!("{error}");
                 continue;
             }
