@@ -1,0 +1,4 @@
+services:
+  uda-results-extractor:
+    image: local/uda-results-extractor:latest
+    build: .
