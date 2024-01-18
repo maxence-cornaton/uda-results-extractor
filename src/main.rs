@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
 use crate::competitor::competitor::Competitor;
 use crate::convention::convention::Convention;
+use crate::download::{DATA_FOLDER, download_data};
 use crate::person::person::{create_people_from_registrations, Person};
 use crate::person::person_name::PersonName;
 use crate::raw_result::raw_result::{RawResult, read_registrations_from_raw_results_lines};
@@ -16,19 +15,27 @@ mod person;
 mod competitor;
 mod registration;
 mod raw_result;
+mod download;
+mod utils;
 
-fn main() {
-    let mut conventions = HashMap::new();
-    conventions.insert("CFM 2023", "cfm2023.xls");
-    conventions.insert("Unicon 20", "unicon20.xls");
+#[tokio::main]
+async fn main() {
+    let data = download_data().await;
+    if data.is_err() {
+        eprintln!("No data, can't continue...");
+        return;
+    }
+    let conventions = data.unwrap();
 
     let mut all_registrations = vec![];
-    for (convention_name, file_name) in conventions {
-        let convention = Convention::new(String::from(convention_name));
-        let raw_results = match load_raw_results(file_name) {
+    for convention_details in conventions {
+        let convention = Convention::new(convention_details[1].clone());
+        let file_name = format!("{}/{}/results.xls", DATA_FOLDER, convention_details[0]);
+        let raw_results = match load_raw_results(&file_name) {
             Ok(raw_results) => { raw_results }
             Err(error) => {
-                eprintln!("Can't load raw results: {}", error);
+                eprintln!("Can't load raw results [convention: {}, filename: {file_name}]", convention_details[1]);
+                eprintln!("{error}");
                 continue;
             }
         };
@@ -37,12 +44,12 @@ fn main() {
     }
 
     let people = create_people_from_registrations(&all_registrations);
-    filter_people_on_name(&people, "Maxence Cornaton");
+    // filter_people_on_name(&people, "Maxence Cornaton");
+    // filter_people_with_asterisk(&people);
 }
 
-fn load_raw_results(file_name: &str) -> Result<Vec<RawResult>, Error> {
-    let path = format!("{}/resources/{}", env!("CARGO_MANIFEST_DIR"), file_name);
-    let mut workbook: Xls<_> = open_workbook(path)?;
+fn load_raw_results(file_path: &str) -> Result<Vec<RawResult>, Error> {
+    let mut workbook: Xls<_> = open_workbook(file_path)?;
     let range = workbook.worksheet_range("Worksheet1")
         .map_err(|_error| Error::Msg("Cannot find 'Worksheet1'"))?;
 
@@ -95,6 +102,14 @@ fn filter_people_on_name(people: &Vec<Person>, name: &str) {
     let name = PersonName::new(name);
     for person in people {
         if person.name() == &name {
+            println!("{} => {:?}", person.name().name(), person.registrations());
+        }
+    }
+}
+
+fn filter_people_with_asterisk(people: &Vec<Person>) {
+    for person in people {
+        if person.name().name().contains("*") {
             println!("{} => {:?}", person.name().name(), person.registrations());
         }
     }

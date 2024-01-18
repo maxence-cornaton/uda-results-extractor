@@ -1,1 +1,5 @@
 /target
+
+# User files
+data/
+.env
