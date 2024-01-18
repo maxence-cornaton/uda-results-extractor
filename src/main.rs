@@ -1,11 +1,15 @@
+use std::collections::HashSet;
+
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
 use crate::competitor::competitor::Competitor;
-use crate::download::{DATA_FOLDER, download_data};
+use crate::convention::convention::{compute_conventions_to_download, dump_conventions, load_conventions};
+use crate::download::download_data;
 use crate::person::person::{create_people_from_registrations, Person};
 use crate::person::person_name::PersonName;
 use crate::raw_result::raw_result::{RawResult, read_registrations_from_raw_results_lines};
 use crate::registration::registration::Registration;
+use crate::utils::DATA_FOLDER;
 use crate::utils::env_manager::retrieve_env_value;
 
 mod competition;
@@ -27,13 +31,22 @@ async fn main() {
         }
         Some(conventions_tag) => { conventions_tag.split(',').map(str::to_string).collect() }
     };
+    let loaded_conventions = load_conventions(DATA_FOLDER);
+    let conventions_to_download = compute_conventions_to_download(&loaded_conventions, &conventions_tag);
 
-    let data = download_data(&conventions_tag).await;
+    let data = download_data(&conventions_to_download).await;
     if data.is_err() {
         eprintln!("No data, can't continue...");
         return;
     }
-    let conventions = data.unwrap();
+    let downloaded_conventions = data.unwrap();
+    let mut conventions = HashSet::from_iter(downloaded_conventions.iter());
+    conventions.extend(loaded_conventions.iter().map(|(tag, convention)| convention));
+
+    let dump_result = dump_conventions(DATA_FOLDER, &conventions);
+    if dump_result.is_err() {
+        eprintln!("Can't dump conventions. However, process will continue.");
+    }
 
     let mut all_registrations = vec![];
     for convention in conventions {

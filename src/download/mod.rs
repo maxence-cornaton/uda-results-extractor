@@ -1,4 +1,5 @@
-use std::fs::{create_dir_all, File};
+use std::collections::HashSet;
+use std::fs::File;
 use std::io::{Error, ErrorKind, Write};
 
 use reqwest::{Client, StatusCode};
@@ -6,14 +7,10 @@ use scraper::{Html, Selector};
 use tokio::join;
 
 use crate::convention::convention::Convention;
+use crate::utils::{create_folder, DATA_FOLDER};
 use crate::utils::credentials::Credentials;
 
-const CONVENTIONS_TAG: [&str; 2] = [
-    "cfm2023",
-    "unicon2020"
-];
 const UDA_DOMAIN: &str = "reg.unicycling-software.com/en";
-pub const DATA_FOLDER: &str = "data";
 
 fn build_client() -> Client {
     reqwest::ClientBuilder::new()
@@ -22,7 +19,7 @@ fn build_client() -> Client {
         .unwrap()
 }
 
-pub async fn download_data(conventions_tag: &Vec<String>) -> Result<Vec<Convention>, ()> {
+pub async fn download_data(conventions_tag: &HashSet<&String>) -> Result<Vec<Convention>, ()> {
     let credentials = Credentials::load_credentials()
         .or_else(|error| {
             eprintln!("Can't download data because no credential: {error}");
@@ -55,12 +52,9 @@ pub async fn download_data(conventions_tag: &Vec<String>) -> Result<Vec<Conventi
 }
 
 fn create_folder_for_convention(convention_tag: &str) -> Result<(), ()> {
-    create_dir_all(format!("{DATA_FOLDER}/{}", convention_tag)).or_else(
-        |error| {
-            eprintln!("Can't download data because can't create folder [convention: {}]", convention_tag);
-            eprintln!("{error}");
-            Err(())
-        }
+    create_folder(
+        &format!("{}/{}", DATA_FOLDER, convention_tag),
+        &format!("Can't download data because can't create folder [convention: {}]", convention_tag),
     )
 }
 
