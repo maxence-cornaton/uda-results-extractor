@@ -21,6 +21,7 @@ fn load_env_file() -> HashMap<String, String> {
     let lines: Vec<&str> = env_file_content
         .split('\n')
         .filter(|line| !line.trim().is_empty())
+        .filter(|line| !line.starts_with('#'))
         .collect();
     for line in lines {
         match line.split_once('=') {
