@@ -2,13 +2,11 @@ use std::collections::HashSet;
 
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
-use crate::competitor::competitor::Competitor;
-use crate::convention::convention::{compute_conventions_to_download, dump_conventions, load_conventions};
+use crate::convention::convention::{compute_conventions_to_download, Convention, dump_conventions, load_conventions_from_folder};
 use crate::download::download_data;
-use crate::person::person::{create_people_from_registrations, Person};
-use crate::person::person_name::PersonName;
+use crate::person::person::create_people_from_registrants;
 use crate::raw_result::raw_result::{RawResult, read_registrations_from_raw_results_lines};
-use crate::registration::registration::Registration;
+use crate::registration::registrant::load_registrants_for_conventions;
 use crate::utils::DATA_FOLDER;
 use crate::utils::env_manager::retrieve_env_value;
 
@@ -24,32 +22,24 @@ mod utils;
 
 #[tokio::main]
 async fn main() {
-    let conventions_tag = match retrieve_env_value("CONVENTIONS") {
-        None => {
-            eprintln!("No convention to deal with, can't continue...");
+    let conventions = match load_conventions().await {
+        Ok(conventions) => { conventions }
+        Err(_) => {
+            eprintln!("Aborting process");
             return;
         }
-        Some(conventions_tag) => { conventions_tag.split(',').map(str::trim).map(str::to_string).collect() }
     };
-    let loaded_conventions = load_conventions(DATA_FOLDER);
-    let mut conventions = HashSet::from_iter(loaded_conventions.iter().map(|(_, convention)| convention));
-    let conventions_to_download = compute_conventions_to_download(&loaded_conventions, &conventions_tag);
-    let downloaded_conventions = if !conventions_to_download.is_empty() {
-        let data = download_data(&conventions_to_download).await;
-        if data.is_err() {
-            eprintln!("No data, can't continue...");
-            return;
-        }
-        data.unwrap()
-    } else {
-        vec![]
-    };
-    conventions.extend(&downloaded_conventions);
 
-    let dump_result = dump_conventions(DATA_FOLDER, &conventions);
-    if dump_result.is_err() {
-        eprintln!("Can't dump conventions. However, process will continue.");
-    }
+    let registrants = match load_registrants_for_conventions(&conventions) {
+        Ok(registrants) => { registrants }
+        Err(error) => {
+            eprintln!("Registrants not loaded: {error}");
+            eprintln!("Aborting process");
+            return;
+        }
+    };
+
+    let people = create_people_from_registrants(&registrants);
 
     let mut all_registrations = vec![];
     for convention in conventions {
@@ -66,9 +56,38 @@ async fn main() {
         all_registrations.append(&mut registrations);
     }
 
-    let people = create_people_from_registrations(&all_registrations);
-    // filter_people_on_name(&people, "Maxence Cornaton");
-    // filter_people_with_asterisk(&people);
+    // let people = create_people_from_registrations(&all_registrations);
+}
+
+async fn load_conventions() -> Result<HashSet<Convention>, ()> {
+    let conventions_tag = match retrieve_env_value("CONVENTIONS") {
+        None => {
+            eprintln!("No convention to deal with, can't continue...");
+            return Err(());
+        }
+        Some(conventions_tag) => { conventions_tag.split(',').map(str::trim).map(str::to_string).collect() }
+    };
+    let loaded_conventions = load_conventions_from_folder(DATA_FOLDER);
+    let mut conventions = HashSet::from_iter(loaded_conventions.iter().map(|(_, convention)| convention.clone()));
+    let conventions_to_download = compute_conventions_to_download(&loaded_conventions, &conventions_tag);
+    let downloaded_conventions = if !conventions_to_download.is_empty() {
+        let data = download_data(&conventions_to_download).await;
+        if data.is_err() {
+            eprintln!("No data, can't continue...");
+            return Err(());
+        }
+        data.unwrap()
+    } else {
+        vec![]
+    };
+    conventions.extend(downloaded_conventions);
+
+    let dump_result = dump_conventions(DATA_FOLDER, &conventions);
+    if dump_result.is_err() {
+        eprintln!("Can't dump conventions. However, process will continue.");
+    }
+
+    Ok(conventions)
 }
 
 fn load_raw_results(file_path: &str) -> Result<Vec<RawResult>, Error> {
@@ -87,53 +106,4 @@ fn load_raw_results(file_path: &str) -> Result<Vec<RawResult>, Error> {
     }
 
     Ok(raw_results)
-}
-
-fn filter_registrations_on_competitor_name(registrations: &Vec<Registration>, competitor_name: &str) {
-    for registration in registrations {
-        match registration.competitor() {
-            Competitor::IndividualCompetitor(competitor) => {
-                if competitor.name().to_lowercase() == competitor_name.to_lowercase() {
-                    println!("{:?}", registration);
-                }
-            }
-            Competitor::Team(_) => {}
-            Competitor::UnknownIndividualCompetitor(_) => {}
-        }
-    }
-}
-
-fn filter_registrations_on_id(registrations: &Vec<Registration>, id: &u16) {
-    for registration in registrations {
-        match registration.competitor() {
-            Competitor::IndividualCompetitor(competitor) => {
-                if competitor.id() == id {
-                    println!("{:?}", registration);
-                }
-            }
-            Competitor::Team(_) => {}
-            Competitor::UnknownIndividualCompetitor(competitor) => {
-                if competitor.id() == id {
-                    println!("{:?}", registration);
-                }
-            }
-        }
-    }
-}
-
-fn filter_people_on_name(people: &Vec<Person>, name: &str) {
-    let name = PersonName::new(name);
-    for person in people {
-        if person.name() == &name {
-            println!("{} => {:?}", person.name().name(), person.registrations());
-        }
-    }
-}
-
-fn filter_people_with_asterisk(people: &Vec<Person>) {
-    for person in people {
-        if person.name().name().contains("*") {
-            println!("{} => {:?}", person.name().name(), person.registrations());
-        }
-    }
 }

@@ -2,22 +2,23 @@ use std::collections::HashMap;
 
 use derive_getters::Getters;
 
-use crate::competitor::competitor::Competitor;
+use crate::convention::convention::Convention;
+use crate::person::identity::Identity;
 use crate::person::person_name::PersonName;
+use crate::registration::registrant::Registrant;
 use crate::registration::registration::Registration;
 
 #[derive(Clone, Debug, Getters)]
-pub struct Person {
-    name: PersonName,
+pub struct Person<'a> {
+    identity: Identity,
+    registered: HashMap<&'a Convention, u16>,
     registrations: Vec<Registration>,
 }
 
-impl Person {
-    pub fn new(name: PersonName) -> Self {
-        Self {
-            name,
-            registrations: vec![],
-        }
+impl<'a> Person<'a> {
+    pub fn new(identity: Identity, registered: HashMap<&'a Convention, u16>) -> Self {
+        let registrations = vec![];
+        Self { identity, registered, registrations }
     }
 
     pub fn add_registration(&mut self, registration: Registration) {
@@ -25,33 +26,30 @@ impl Person {
     }
 }
 
-pub fn create_people_from_registrations(registrations: &Vec<Registration>) -> Vec<Person> {
-    let mut people = HashMap::new();
+pub fn create_people_from_registrants<'a>(registrants: &HashMap<&'a Convention, Vec<Registrant>>) -> Vec<Person<'a>> {
+    let mut people_information: HashMap<Identity, HashMap<&Convention, u16>> = HashMap::new();
 
-    for registration in registrations {
-        match registration.competitor() {
-            Competitor::IndividualCompetitor(competitor) => {
-                let competitor_name = competitor.name();
-                let person_name = PersonName::new(competitor_name);
-                let option = people.get_mut(&person_name);
-                if option.is_none() {
-                    let mut person = Person::new(person_name.clone());
-                    person.add_registration(registration.clone());
-                    people.insert(person_name, person);
-                } else {
-                    let person = option.unwrap();
-                    person.add_registration(registration.clone());
-                }
+    for (convention, registrants) in registrants {
+        for registrant in registrants {
+            let name = PersonName::from_names(&[registrant.first_name(), registrant.last_name()]);
+            let birthday = registrant.birthday();
+            let identity = Identity::new(name, *birthday);
+
+            let mut option = people_information.get_mut(&identity);
+            if option.is_some() {
+                option.as_mut().unwrap().insert(*convention, *registrant.id());
+            } else {
+                let mut information = HashMap::new();
+                information.insert(*convention, *registrant.id());
+                people_information.insert(identity, information);
             }
-            Competitor::Team(_) => {}
-            Competitor::UnknownIndividualCompetitor(_) => {}
         }
     }
 
-    let mut people_as_vec = vec![];
-    for (_, person) in people {
-        people_as_vec.push(person.clone());
+    let mut people = vec![];
+    for (identity, registered) in people_information {
+        people.push(Person::new(identity, registered));
     }
 
-    people_as_vec
+    people
 }

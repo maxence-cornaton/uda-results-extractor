@@ -9,14 +9,31 @@ pub struct PersonName {
 
 impl PersonName {
     pub fn new(name: &str) -> Self {
-        let mut name_parts: Vec<String> = name
+        let mut name_parts: Vec<String> = PersonName::sanitize_name(name);
+        name_parts.sort();
+        Self { name: String::from(name.trim()), name_parts }
+    }
+
+    pub fn from_names(names: &[&String; 2]) -> Self {
+        let name_parts = names.iter()
+            .map(|name| PersonName::sanitize_name(name))
+            .flatten()
+            .collect();
+
+        let displayed_name = names.iter()
+            .map(|name_part| name_part.trim().to_string())
+            .fold(String::new(), |a, b| format!("{a} {b}"));
+
+        Self { name: String::from(displayed_name), name_parts }
+    }
+
+    fn sanitize_name(name: &str) -> Vec<String> {
+        name
             .split(' ')
             .filter(|s| !s.is_empty())
             .map(|s| s.to_lowercase())
             .map(|s| deunicode(&s))
-            .collect();
-        name_parts.sort();
-        Self { name: String::from(name.trim()), name_parts }
+            .collect()
     }
 }
 

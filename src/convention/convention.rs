@@ -23,7 +23,7 @@ impl Convention {
     }
 }
 
-pub fn dump_conventions(folder: &str, conventions: &HashSet<&Convention>) -> Result<(), ()> {
+pub fn dump_conventions(folder: &str, conventions: &HashSet<Convention>) -> Result<(), ()> {
     create_folder(
         folder,
         &format!("Can't dump conventions because folder couldn't be created [folder: {folder}]"),
@@ -48,7 +48,7 @@ pub fn dump_conventions(folder: &str, conventions: &HashSet<&Convention>) -> Res
     }
 }
 
-pub fn load_conventions(folder: &str) -> HashMap<String, Convention> {
+pub fn load_conventions_from_folder(folder: &str) -> HashMap<String, Convention> {
     let mut conventions_with_data = HashMap::new();
     let filepath = format!("{folder}/{CONVENTIONS_FILE}");
     let file = match File::open(filepath) {
