@@ -7,7 +7,7 @@ use crate::competition::competition_result::CompetitionResult;
 use crate::competitor::competitor::Competitor;
 use crate::convention::convention::Convention;
 
-#[derive(Clone, Debug, Getters)]
+#[derive(Clone, Debug, Getters, PartialEq)]
 pub struct Registration {
     competitor: Competitor,
     convention: Convention,

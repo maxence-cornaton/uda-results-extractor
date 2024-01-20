@@ -8,7 +8,7 @@ use crate::person::person_name::PersonName;
 use crate::registration::registrant::Registrant;
 use crate::registration::registration::Registration;
 
-#[derive(Clone, Debug, Getters)]
+#[derive(Clone, Debug, Getters, PartialEq)]
 pub struct Person<'a> {
     identity: Identity,
     registered: HashMap<&'a Convention, u16>,

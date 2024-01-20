@@ -5,7 +5,7 @@ use crate::result::result_value::ResultValue;
 
 /// A [CompetitionResult] is defined by a competition, a place,
 /// a result type, a result, optional details and an age group.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompetitionResult {
     place: Place,
     result_type: ResultType,

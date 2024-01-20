@@ -14,7 +14,7 @@ thread_local!(static DISTANCE_REGEX: Regex = Regex::new(r"^(\d+) cm").unwrap());
 /// - Distance (cm)
 /// - Points
 /// - Custom
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ResultValue {
     Empty,
     Time(Duration),

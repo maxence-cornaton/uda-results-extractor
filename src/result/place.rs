@@ -2,7 +2,7 @@ const AUTHORIZED_DISQUALIFIED_STRINGS: [&str; 2] = ["DNF", "DQ"];
 
 /// A [Place] can either be a rank denoted as an unsigned integer
 /// or a disqualification acronym ("DNF", "DQ") denoted as a String.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Place {
     Rank(u16),
     Disqualified(String),
