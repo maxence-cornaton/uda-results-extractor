@@ -3,6 +3,7 @@ use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::time::Duration;
 
+use log::{error, trace, warn};
 use regex::{Match, Regex};
 
 use crate::competition::competition::Competition;
@@ -149,35 +150,50 @@ pub fn get_best_results<'a>(results: &'a Vec<CompetitionResult>, higher_is_bette
             None => { best_values.insert(competition, result); }
             Some(best_result_so_far) => {
                 let ordering = result.result().as_ref().unwrap().compare(best_result_so_far.result().as_ref().unwrap());
-                // FIXME: add debug information
                 if ordering.is_ok() {
                     let ordering = ordering.unwrap();
                     let higher_is_better = higher_is_better_for_competition.get(competition);
                     if higher_is_better.is_none() {
-                        eprintln!("No information on what's better for competition [competition: {:?}]", competition);
+                        warn!("No information on what's better for competition [competition: {:?}]", competition);
                         continue;
                     }
                     let higher_is_better = *higher_is_better.unwrap();
                     if higher_is_better {
                         if ordering == Greater {
+                            trace!("New value is greater than previous, will replace previous [new: {:?}, previous: {:?}, higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
                             best_values.insert(competition, result);
                         } else if ordering == Equal {
                             // FIXME: should be added
+                            trace!("New value is equal to previous [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
+                            warn!("New value is equal to previous, but new is ignored as of now [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
                         } else if ordering == Less {
                             // FIXME: add trace
+                            trace!("New value is less than previous, will not replace previous [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
                         }
                     } else {
                         if ordering == Less {
+                            trace!("New value is less than previous, will replace previous [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
                             best_values.insert(competition, result);
                         } else if ordering == Equal {
                             // FIXME: should be added
+                            trace!("New value is equal to previous [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
+                            warn!("New value is equal to previous, but new is ignored as of now [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
                         } else if ordering == Greater {
                             // FIXME: add trace
+                            trace!("New value is greater than previous, will not replace previous [new: {:?}, previous: {:?}, , higher_better: {}]",
+                                result, best_result_so_far, higher_is_better);
                         }
                     }
                 } else {
-                    eprintln!("Can't compare results [best_result_so_far: {:?}, result: {:?}]", best_result_so_far, result);
-                    eprintln!("{}", ordering.err().unwrap());
+                    error!("Can't compare results [best_result_so_far: {:?}, result: {:?}]", best_result_so_far, result);
+                    error!("{}", ordering.err().unwrap());
                 }
             }
         };
@@ -188,6 +204,8 @@ pub fn get_best_results<'a>(results: &'a Vec<CompetitionResult>, higher_is_bette
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
+
+    use log::info;
 
     use crate::competition::competition::Competition;
     use crate::competition::competition_result::CompetitionResult;
@@ -222,7 +240,7 @@ mod tests {
         higher_is_better_for_competition.insert(Competition::new("Competition"), true);
 
         let best_results = get_best_results(&results, &higher_is_better_for_competition);
-        println!("{:?}", best_results);
+        info!("{:?}", best_results);
 
         let best_result = *best_results.get(&Competition::new("Competition")).unwrap();
         assert_eq!(best_result, &result2);

@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
+use log::{error, warn};
 
 use crate::convention::convention::{compute_conventions_to_download, Convention, dump_conventions, load_conventions_from_folder};
 use crate::download::download_data;
@@ -22,10 +23,12 @@ mod utils;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let conventions = match load_conventions().await {
         Ok(conventions) => { conventions }
         Err(_) => {
-            eprintln!("Aborting process");
+            error!("Aborting process");
             return;
         }
     };
@@ -33,25 +36,24 @@ async fn main() {
     let registrants = match load_registrants_for_conventions(&conventions) {
         Ok(registrants) => { registrants }
         Err(error) => {
-            eprintln!("Registrants not loaded: {error}");
-            eprintln!("Aborting process");
+            error!("Registrants not loaded: {error}");
+            error!("Aborting process");
             return;
         }
     };
-    println!("{}", registrants.get(conventions.iter().last().unwrap()).unwrap().len());
     let raw_results = load_raw_results_for_conventions(&conventions);
     let results = raw_results.iter()
         .map(|(convention, raw_results)| (*convention, get_results_from_raw_results_lines(raw_results)))
         .collect();
     let people = create_people(&registrants, &results);
 
-    println!("{:?}", people);
+    // info!("{:?}", people);
 }
 
 async fn load_conventions() -> Result<HashSet<Convention>, ()> {
     let conventions_tag = match retrieve_env_value("CONVENTIONS") {
         None => {
-            eprintln!("No convention to deal with, can't continue...");
+            error!("No convention to deal with, can't continue...");
             return Err(());
         }
         Some(conventions_tag) => { conventions_tag.split(',').map(str::trim).map(str::to_string).collect() }
@@ -62,7 +64,7 @@ async fn load_conventions() -> Result<HashSet<Convention>, ()> {
     let downloaded_conventions = if !conventions_to_download.is_empty() {
         let data = download_data(&conventions_to_download).await;
         if data.is_err() {
-            eprintln!("No data, can't continue...");
+            error!("No data, can't continue...");
             return Err(());
         }
         data.unwrap()
@@ -73,7 +75,7 @@ async fn load_conventions() -> Result<HashSet<Convention>, ()> {
 
     let dump_result = dump_conventions(DATA_FOLDER, &conventions);
     if dump_result.is_err() {
-        eprintln!("Can't dump conventions. However, process will continue.");
+        warn!("Can't dump conventions. However, process will continue.");
     }
 
     Ok(conventions)

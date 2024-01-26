@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Write};
 
+use log::{error, info};
 use reqwest::{Client, StatusCode};
 use scraper::{Html, Selector};
 use tokio::join;
@@ -22,7 +23,7 @@ fn build_client() -> Client {
 pub async fn download_data(conventions_tag: &HashSet<&String>) -> Result<Vec<Convention>, ()> {
     let credentials = Credentials::load_credentials()
         .or_else(|error| {
-            eprintln!("Can't download data because no credential: {error}");
+            error!("Can't download data because no credential: {error}");
             Err(())
         })?;
 
@@ -37,13 +38,13 @@ pub async fn download_data(conventions_tag: &HashSet<&String>) -> Result<Vec<Con
         let download_result = download_data_for_convention(&client, &credentials, convention_tag).await;
         if download_result.is_ok() {
             let convention_name = download_result.unwrap();
-            println!("Convention has been successfully downloaded [convention: {}]", convention_name);
+            info!("Convention has been successfully downloaded [convention: {}]", convention_name);
             downloaded_conventions.push(Convention::new(convention_tag.to_string(), convention_name));
         } else {
             let errors = download_result.unwrap_err();
-            eprintln!("Errors encountered while downloading convention data [convention: {}]", convention_tag);
+            error!("Errors encountered while downloading convention data [convention: {}]", convention_tag);
             for error in errors {
-                eprintln!("{}", error);
+                error!("{}", error);
             }
         }
     }
@@ -160,7 +161,7 @@ async fn login(client: &Client, base_url: &str, authenticity_token: &str, creden
         || text.contains("You are already signed in") {
         Ok(())
     } else {
-        println!("Failed to authenticate: {status}");
+        error!("Failed to authenticate: {status}");
         Err(Error::new(ErrorKind::PermissionDenied, format!("Failed to authenticate: {status}")))
     }
 }

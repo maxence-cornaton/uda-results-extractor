@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{BufReader, Write};
 
 use derive_getters::Getters;
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -33,16 +34,16 @@ pub fn dump_conventions(folder: &str, conventions: &HashSet<Convention>) -> Resu
     let mut file = match File::create(&filepath) {
         Ok(file) => { Ok(file) }
         Err(error) => {
-            eprintln!("Can't dump conventions because file couldn't be opened [filepath: {filepath}]");
-            eprintln!("{}", error);
+            warn!("Can't dump conventions because file couldn't be opened [filepath: {filepath}]");
+            warn!("{}", error);
             Err(())
         }
     }?;
     match file.write_all(json.to_string().as_bytes()) {
         Ok(_) => { Ok(()) }
         Err(error) => {
-            eprintln!("Can't dump conventions [filepath: {filepath}]");
-            eprintln!("{}", error);
+            warn!("Can't dump conventions [filepath: {filepath}]");
+            warn!("{}", error);
             Err(())
         }
     }
@@ -76,11 +77,11 @@ pub fn compute_conventions_to_download<'a>(already_downloaded_conventions: &Hash
         if !already_downloaded_conventions.contains_key(convention_tag) {
             conventions_to_download.insert(convention_tag);
         } else {
-            println!("Convention already exists locally [convention:{convention_tag}]");
+            debug!("Convention already exists locally [convention:{convention_tag}]");
         }
     }
 
-    println!("Conventions to download: {:?}", conventions_to_download);
+    info!("Conventions to download: {:?}", conventions_to_download);
     conventions_to_download
 }
 
@@ -101,9 +102,9 @@ fn check_convention_data_exists(folder: &str, convention: &Convention) -> bool {
     if errors.is_empty() {
         true
     } else {
-        eprintln!("Convention data does not exist [convention: {}]", convention.name());
+        warn!("Convention data does not exist [convention: {}]", convention.name());
         for error in errors {
-            eprintln!("{}", error);
+            warn!("{}", error);
         }
         false
     }

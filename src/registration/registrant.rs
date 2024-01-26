@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use chrono::NaiveDate;
 use derive_getters::Getters;
+use log::warn;
 use serde::Deserialize;
 
 use crate::convention::convention::Convention;
@@ -48,8 +49,8 @@ fn parse_registrant(registrant: Result<Registrant, csv::Error>) -> Option<Regist
     let registrant: Registrant = match registrant {
         Ok(person) => { person }
         Err(error) => {
-            eprintln!("Can't read registrant");
-            eprintln!("{}", error);
+            warn!("Can't read registrant");
+            warn!("{}", error);
             return None;
         }
     };

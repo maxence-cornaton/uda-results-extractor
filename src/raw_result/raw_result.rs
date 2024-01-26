@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use derive_getters::Getters;
+use log::{error, warn};
 
 use crate::competition::competition::Competition;
 use crate::competition::competition_result::CompetitionResult;
@@ -51,8 +52,8 @@ pub fn load_raw_results_for_conventions(conventions: &HashSet<Convention>) -> Ha
         let raw_results = match load_raw_results(&file_name) {
             Ok(raw_results) => { raw_results }
             Err(error) => {
-                eprintln!("Can't load raw results [convention: {}, filename: {file_name}]", convention.name());
-                eprintln!("{error}");
+                error!("Can't load raw results [convention: {}, filename: {file_name}]", convention.name());
+                error!("{error}");
                 continue;
             }
         };
@@ -70,7 +71,7 @@ pub fn get_results_from_raw_results_lines(raw_results: &Vec<RawResult>) -> Vec<C
         let result = match read_competition_result_from_raw_result(raw_result) {
             Ok(result) => { result }
             Err(error) => {
-                eprintln!("Can't read raw result line: {}", error);
+                warn!("Can't read raw result line: {}", error);
                 continue;
             }
         };
@@ -99,7 +100,7 @@ fn get_ids_from_raw_result(ids: &str) -> Vec<u16> {
         match id.parse::<u16>() {
             Ok(id) => ids_vec.push(id),
             Err(_) => {
-                eprintln!("Expected ID as integer, but got something else [ids: {:?}, wrong_id: {}]",
+                error!("Expected ID as integer, but got something else [ids: {:?}, wrong_id: {}]",
                           ids, id);
                 continue;
             }
