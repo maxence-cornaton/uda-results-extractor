@@ -1,5 +1,6 @@
 use derive_getters::Getters;
 use deunicode::deunicode;
+use itertools::Itertools;
 
 #[derive(Debug, Getters, Eq, Hash, Clone)]
 pub struct PersonName {
@@ -17,6 +18,7 @@ impl PersonName {
     pub fn from_names(names: &[&String; 2]) -> Self {
         let name_parts = names.iter()
             .map(|name| PersonName::sanitize_name(name))
+            .sorted()
             .flatten()
             .collect();
 

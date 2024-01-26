@@ -53,7 +53,6 @@ fn parse_registrant(registrant: Result<Registrant, csv::Error>) -> Option<Regist
             return None;
         }
     };
-    println!("{:?}", registrant);
     Some(registrant)
 }
 

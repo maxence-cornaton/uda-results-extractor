@@ -1,11 +1,11 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use calamine::{Error, open_workbook, RangeDeserializerBuilder, Reader, Xls};
 
 use crate::convention::convention::{compute_conventions_to_download, Convention, dump_conventions, load_conventions_from_folder};
 use crate::download::download_data;
-use crate::person::person::{create_people_from_registrants, Person};
-use crate::raw_result::raw_result::{RawResult, read_registrations_from_raw_results_lines};
+use crate::person::person::create_people;
+use crate::raw_result::raw_result::{get_results_from_raw_results_lines, load_raw_results_for_conventions, RawResult};
 use crate::registration::registrant::load_registrants_for_conventions;
 use crate::utils::DATA_FOLDER;
 use crate::utils::env_manager::retrieve_env_value;
@@ -38,26 +38,14 @@ async fn main() {
             return;
         }
     };
+    println!("{}", registrants.get(conventions.iter().last().unwrap()).unwrap().len());
+    let raw_results = load_raw_results_for_conventions(&conventions);
+    let results = raw_results.iter()
+        .map(|(convention, raw_results)| (*convention, get_results_from_raw_results_lines(raw_results)))
+        .collect();
+    let people = create_people(&registrants, &results);
 
-    let people = create_people_from_registrants(&registrants);
-    let indexed_people = index_people_by_convention_and_id(&people);
-
-    let mut all_registrations = vec![];
-    for convention in conventions {
-        let file_name = format!("{}/{}/results.xls", DATA_FOLDER, convention.tag());
-        let raw_results = match load_raw_results(&file_name) {
-            Ok(raw_results) => { raw_results }
-            Err(error) => {
-                eprintln!("Can't load raw results [convention: {}, filename: {file_name}]", convention.name());
-                eprintln!("{error}");
-                continue;
-            }
-        };
-        let mut registrations = read_registrations_from_raw_results_lines(&convention, &raw_results);
-        all_registrations.append(&mut registrations);
-    }
-
-    // let people = create_people_from_registrations(&all_registrations);
+    println!("{:?}", people);
 }
 
 async fn load_conventions() -> Result<HashSet<Convention>, ()> {
@@ -68,7 +56,7 @@ async fn load_conventions() -> Result<HashSet<Convention>, ()> {
         }
         Some(conventions_tag) => { conventions_tag.split(',').map(str::trim).map(str::to_string).collect() }
     };
-    let loaded_conventions = load_conventions_from_folder(DATA_FOLDER);
+    let loaded_conventions = load_conventions_from_folder(DATA_FOLDER, &conventions_tag);
     let mut conventions = HashSet::from_iter(loaded_conventions.iter().map(|(_, convention)| convention.clone()));
     let conventions_to_download = compute_conventions_to_download(&loaded_conventions, &conventions_tag);
     let downloaded_conventions = if !conventions_to_download.is_empty() {
@@ -107,64 +95,4 @@ fn load_raw_results(file_path: &str) -> Result<Vec<RawResult>, Error> {
     }
 
     Ok(raw_results)
-}
-
-fn index_people_by_convention_and_id<'a>(people: &'a Vec<Person>) -> HashMap<&'a Convention, HashMap<u16, &'a Person<'a>>> {
-    let mut index = HashMap::new();
-
-    for person in people {
-        for (convention, id) in person.registered() {
-            let mut convention_index = index.entry(*convention).or_insert(HashMap::new());
-            convention_index.insert(*id, person);
-        }
-    }
-
-    index
-}
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    use chrono::NaiveDate;
-
-    use crate::convention::convention::Convention;
-    use crate::index_people_by_convention_and_id;
-    use crate::person::identity::Identity;
-    use crate::person::person::Person;
-    use crate::person::person_name::PersonName;
-
-    #[test]
-    fn should_index_by_convention_and_id() {
-        let convention1 = Convention::new("convention1".to_string(), "Convention 1".to_string());
-        let convention2 = Convention::new("convention2".to_string(), "Convention 2".to_string());
-
-        let mut registered1 = HashMap::new();
-        registered1.insert(&convention1, 10);
-        registered1.insert(&convention2, 20);
-        let person1 = Person::new(
-            Identity::new(PersonName::new("John Doe"), NaiveDate::from_ymd_opt(1990, 1, 1).unwrap()),
-            registered1,
-        );
-
-        let mut registered2 = HashMap::new();
-        registered2.insert(&convention1, 100);
-        registered2.insert(&convention2, 200);
-        let person2 = Person::new(
-            Identity::new(PersonName::new("Jean Dean"), NaiveDate::from_ymd_opt(200, 11, 11).unwrap()),
-            registered2,
-        );
-
-        let people = vec![
-            person1.clone(),
-            person2.clone(),
-        ];
-
-        let indexed = index_people_by_convention_and_id(&people);
-
-        assert_eq!(**indexed.get(&convention1).unwrap().get(&10).unwrap(), person1);
-        assert_eq!(**indexed.get(&convention2).unwrap().get(&20).unwrap(), person1);
-        assert_eq!(**indexed.get(&convention1).unwrap().get(&100).unwrap(), person2);
-        assert_eq!(**indexed.get(&convention2).unwrap().get(&200).unwrap(), person2);
-    }
 }

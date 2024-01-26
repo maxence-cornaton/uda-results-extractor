@@ -48,7 +48,7 @@ pub fn dump_conventions(folder: &str, conventions: &HashSet<Convention>) -> Resu
     }
 }
 
-pub fn load_conventions_from_folder(folder: &str) -> HashMap<String, Convention> {
+pub fn load_conventions_from_folder(folder: &str, conventions_tag: &Vec<String>) -> HashMap<String, Convention> {
     let mut conventions_with_data = HashMap::new();
     let filepath = format!("{folder}/{CONVENTIONS_FILE}");
     let file = match File::open(filepath) {
@@ -61,7 +61,7 @@ pub fn load_conventions_from_folder(folder: &str) -> HashMap<String, Convention>
     if result.is_ok() {
         let conventions = result.unwrap();
         for convention in conventions {
-            if check_convention_data_exists(folder, &convention) {
+            if conventions_tag.contains(convention.tag()) && check_convention_data_exists(folder, &convention) {
                 conventions_with_data.insert(convention.tag().clone(), convention);
             }
         }
